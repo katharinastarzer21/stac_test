@@ -581,7 +581,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "eodc_e2e_perf_last_run_timestamp{env=\"$env\"} * 1000",
+          "expr": "max(eodc_e2e_perf_last_run_timestamp{env=\"$env\"}) * 1000",
           "legendFormat": "last run",
           "instant": true,
           "refId": "A"

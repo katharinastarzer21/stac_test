@@ -123,6 +123,7 @@ def _push(grouping_key: dict, reg: CollectorRegistry):
 
 
 def _push_stage_metrics(stats_snapshot: dict, vu_count: int):
+    now = time.time()
     for endpoint, s in stats_snapshot.items():
         safe = endpoint.replace("/", "_").replace("{", "").replace("}", "").strip("_")
         reg = CollectorRegistry()
@@ -134,16 +135,12 @@ def _push_stage_metrics(stats_snapshot: dict, vu_count: int):
               "fraction of failed requests", registry=reg).set(s["err"])
         Gauge("eodc_e2e_perf_vus",
               "virtual user count for this measurement", registry=reg).set(vu_count)
+        # include timestamp in every per-endpoint push so it is always reachable
+        Gauge("eodc_e2e_perf_last_run_timestamp",
+              "unix timestamp of last performance run", registry=reg).set(now)
         _push({"env": ENV, "service": SERVICE, "endpoint": safe}, reg)
         log.info("  pushed  endpoint=%-35s  vu=%3d  p95=%.3fs  rps=%.1f  err=%.3f",
                  endpoint, vu_count, s["p95"], s["rps"], s["err"])
-
-
-def _push_last_run_timestamp():
-    reg = CollectorRegistry()
-    Gauge("eodc_e2e_perf_last_run_timestamp",
-          "unix timestamp of last performance run", registry=reg).set(time.time())
-    _push({"env": ENV, "service": SERVICE}, reg)
 
 # ---------------------------------------------------------------------------
 # Main
@@ -177,7 +174,6 @@ def main():
         _push_stage_metrics(stats_snapshot, vu_count)
 
     env.runner.quit()
-    _push_last_run_timestamp()
     log.info("Performance run complete.")
 
 
