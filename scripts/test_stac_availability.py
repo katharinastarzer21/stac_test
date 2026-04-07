@@ -237,6 +237,10 @@ def probe_asset(col_id: str, asset_url: str) -> ProbeResult:
         return dict(name="asset_fetch", collection=col_id, success=True,
                     duration=dur, http_status=405,
                     msg="warning — HEAD not supported (405)", extras={})
+    if code in (401, 403):
+        return dict(name="asset_fetch", collection=col_id, success=True,
+                    duration=dur, http_status=code,
+                    msg=f"warning — asset requires auth ({code}), URL reachable", extras={})
     ok = 200 <= code < 300
     return dict(name="asset_fetch", collection=col_id, success=ok,
                 duration=dur, http_status=code,
