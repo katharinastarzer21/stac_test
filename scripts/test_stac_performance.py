@@ -45,7 +45,7 @@ PUSHGW_USER = os.environ.get("PUSHGATEWAY_USERNAME")
 PUSHGW_PASS = os.environ.get("PUSHGATEWAY_PASSWORD")
 
 VU_STAGES    = [10, 25, 50, 100]
-STAGE_SECS   = 10 #60
+STAGE_SECS   = 60
 
 logging.basicConfig(
     level=logging.INFO,
