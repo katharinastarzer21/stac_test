@@ -1,0 +1,40 @@
+name: Functional Tests (STAC)
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # nightly at 02:00 UTC
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/test_stac_functional.py"
+      - "scripts/conftest.py"
+  workflow_dispatch:
+
+jobs:
+  functional:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests prometheus-client pytest
+
+      - name: Configure environment
+        run: |
+          echo "PYTHONPATH=$GITHUB_WORKSPACE"                              >> $GITHUB_ENV
+          echo "STAC_URL=https://stac.eodc.eu/api/v1"                     >> $GITHUB_ENV
+          echo "E2E_ENV=prod"                                              >> $GITHUB_ENV
+          echo "PUSHGATEWAY_URL=${{ secrets.PUSHGATEWAY_ENDPOINT }}"      >> $GITHUB_ENV
+          echo "PUSHGATEWAY_USERNAME=${{ secrets.PUSHGATEWAY_USERNAME }}"  >> $GITHUB_ENV
+          echo "PUSHGATEWAY_PASSWORD=${{ secrets.PUSHGATEWAY_PASSWORD }}"  >> $GITHUB_ENV
+          echo "STAC_WRITE_TOKEN=${{ secrets.STAC_WRITE_TOKEN }}"         >> $GITHUB_ENV
+
+      - name: Run functional tests
+        run: pytest scripts/test_stac_functional.py -v --tb=short

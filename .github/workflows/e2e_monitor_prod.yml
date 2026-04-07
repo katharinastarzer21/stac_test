@@ -1,0 +1,33 @@
+name: E2E Monitor STAC (prod)
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests prometheus-client
+
+      - name: Configure environment
+        run: |
+          echo "PYTHONPATH=$GITHUB_WORKSPACE"                              >> $GITHUB_ENV
+          echo "STAC_URL=https://stac.eodc.eu/api/v1"                     >> $GITHUB_ENV
+          echo "E2E_ENV=prod"                                              >> $GITHUB_ENV
+          echo "PUSHGATEWAY_URL=${{ secrets.PUSHGATEWAY_ENDPOINT }}"      >> $GITHUB_ENV
+          echo "PUSHGATEWAY_USERNAME=${{ secrets.PUSHGATEWAY_USERNAME }}"  >> $GITHUB_ENV
+          echo "PUSHGATEWAY_PASSWORD=${{ secrets.PUSHGATEWAY_PASSWORD }}"  >> $GITHUB_ENV
+
+      - name: Run availability probes
+        run: python scripts/test_stac_availability.py

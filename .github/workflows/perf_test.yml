@@ -1,0 +1,51 @@
+name: Performance Tests (STAC)
+
+on:
+  workflow_dispatch:
+    inputs:
+      stac_env:
+        description: "Target environment"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - prod
+          - dev
+      collection:
+        description: "Collection ID to probe (leave blank for auto-detect)"
+        required: false
+        default: ""
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests prometheus-client locust
+
+      - name: Configure environment
+        run: |
+          STAC_ENV="${{ github.event.inputs.stac_env }}"
+          if [ "$STAC_ENV" = "prod" ]; then
+            echo "STAC_URL=https://stac.eodc.eu/api/v1"     >> $GITHUB_ENV
+          else
+            echo "STAC_URL=https://dev.stac.eodc.eu/api/v1" >> $GITHUB_ENV
+          fi
+          echo "E2E_ENV=$STAC_ENV"                                         >> $GITHUB_ENV
+          echo "PYTHONPATH=$GITHUB_WORKSPACE"                              >> $GITHUB_ENV
+          echo "PUSHGATEWAY_URL=${{ secrets.PUSHGATEWAY_ENDPOINT }}"      >> $GITHUB_ENV
+          echo "PUSHGATEWAY_USERNAME=${{ secrets.PUSHGATEWAY_USERNAME }}"  >> $GITHUB_ENV
+          echo "PUSHGATEWAY_PASSWORD=${{ secrets.PUSHGATEWAY_PASSWORD }}"  >> $GITHUB_ENV
+          echo "STAC_PERF_COLLECTION=${{ github.event.inputs.collection }}" >> $GITHUB_ENV
+
+      - name: Run performance test
+        run: python scripts/test_stac_performance.py
