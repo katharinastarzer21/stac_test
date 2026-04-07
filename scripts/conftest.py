@@ -33,18 +33,17 @@ def pytest_runtest_logreport(report):
 def pytest_sessionfinish(session, exitstatus):
     if not PUSHGW_URL:
         return
+    now = time.time()
     for r in _results:
         reg = CollectorRegistry()
         Gauge("eodc_e2e_functional_success",
               "1 pass 0 fail", registry=reg).set(1 if r["success"] else 0)
         Gauge("eodc_e2e_functional_duration_seconds",
               "test duration seconds", registry=reg).set(float(r["duration"]))
+        # include timestamp in every per-test push so it is always reachable
+        Gauge("eodc_e2e_functional_last_run_timestamp",
+              "unix timestamp of last functional run", registry=reg).set(now)
         _push({"env": ENV, "service": SERVICE, "test": r["test"]}, reg)
-
-    reg = CollectorRegistry()
-    Gauge("eodc_e2e_functional_last_run_timestamp",
-          "unix timestamp of last functional run", registry=reg).set(time.time())
-    _push({"env": ENV, "service": SERVICE}, reg)
 
 
 def _push(grouping_key: dict, reg: CollectorRegistry):
