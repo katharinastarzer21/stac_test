@@ -286,7 +286,10 @@ def main():
     probes = run_all_probes()
 
     wall_duration = time.time() - wall_start
-    overall_ok    = all(p["success"] for p in probes)
+    # asset_fetch depends on object-storage auth, not STAC API health.
+    # Failures are still pushed to Pushgateway for visibility in Grafana,
+    # but do not fail the overall run.
+    overall_ok = all(p["success"] for p in probes if p["name"] != "asset_fetch")
 
     log.info("")
     log.info("=" * 72)
@@ -340,8 +343,16 @@ def main():
     push_e2e_result(SERVICE, overall_ok, wall_duration)
     log.info("pushed roll-up  success=%s  duration=%.2fs", overall_ok, wall_duration)
 
+    # Report asset_fetch issues as warnings (visible but don't fail the run)
+    asset_failures = [f"{p['collection']}" for p in probes
+                      if p["name"] == "asset_fetch" and not p["success"]]
+    if asset_failures:
+        log.warning("asset_fetch warnings (not counted as failures): %s",
+                    ", ".join(asset_failures))
+
     if not overall_ok:
-        failed = [f"{p['name']}[{p['collection']}]" for p in probes if not p["success"]]
+        failed = [f"{p['name']}[{p['collection']}]" for p in probes
+                  if not p["success"] and p["name"] != "asset_fetch"]
         log.error("Failed: %s", ", ".join(failed))
         raise SystemExit(1)
 
