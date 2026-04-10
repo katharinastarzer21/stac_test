@@ -175,32 +175,12 @@ def _push(grouping_key: dict, reg: CollectorRegistry):
         log.warning("push failed for %s: %s", grouping_key, e)
 
 
-def _push_stage_metrics(stats_snapshot: dict, vu_count: int):
-    now = time.time()
-    for endpoint, s in stats_snapshot.items():
-        safe = endpoint.replace(" ", "").replace("/", "_").replace("{", "").replace("}", "").strip("_")
-        reg = CollectorRegistry()
-        Gauge("eodc_e2e_perf_p95_seconds",
-              "p95 response time in seconds", registry=reg).set(s["p95"])
-        Gauge("eodc_e2e_perf_rps",
-              "requests per second", registry=reg).set(s["rps"])
-        Gauge("eodc_e2e_perf_error_rate",
-              "fraction of failed requests", registry=reg).set(s["err"])
-        Gauge("eodc_e2e_perf_vus",
-              "virtual user count for this measurement", registry=reg).set(vu_count)
-        # include timestamp in every per-endpoint push so it is always reachable
-        Gauge("eodc_e2e_perf_last_run_timestamp",
-              "unix timestamp of last performance run", registry=reg).set(now)
-        _push({"env": ENV, "service": SERVICE, "endpoint": safe, "vus": str(vu_count)}, reg)
-        log.info("  pushed  endpoint=%-35s  vu=%3d  p95=%.3fs  rps=%.1f  err=%.3f",
-                 endpoint, vu_count, s["p95"], s["rps"], s["err"])
+def _push_all_metrics(all_stages: dict):
+    """Push all metrics (p95, rps, error rate, slowdown ratio) in one PUT per (endpoint, vus).
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-def _push_slowdown(all_stages: dict):
-    """Push slowdown ratio vs the lowest-VU baseline for each endpoint."""
+    Combining everything into a single push per grouping key prevents Pushgateway
+    from overwriting earlier metrics when the slowdown ratio is pushed separately.
+    """
     baseline_vu = VU_STAGES[0]
     baseline = all_stages.get(baseline_vu, {})
     now = time.time()
@@ -210,13 +190,25 @@ def _push_slowdown(all_stages: dict):
             base_p95 = baseline.get(endpoint, {}).get("p95", 0)
             ratio = s["p95"] / base_p95 if base_p95 > 0 else 1.0
             reg = CollectorRegistry()
+            Gauge("eodc_e2e_perf_p95_seconds",
+                  "p95 response time in seconds", registry=reg).set(s["p95"])
+            Gauge("eodc_e2e_perf_rps",
+                  "requests per second", registry=reg).set(s["rps"])
+            Gauge("eodc_e2e_perf_error_rate",
+                  "fraction of failed requests", registry=reg).set(s["err"])
+            Gauge("eodc_e2e_perf_vus",
+                  "virtual user count for this measurement", registry=reg).set(vu_count)
             Gauge("eodc_e2e_perf_slowdown_ratio",
                   f"p95 slowdown vs {baseline_vu}-VU baseline", registry=reg).set(ratio)
             Gauge("eodc_e2e_perf_last_run_timestamp",
                   "unix timestamp of last performance run", registry=reg).set(now)
             _push({"env": ENV, "service": SERVICE, "endpoint": safe, "vus": str(vu_count)}, reg)
-            log.info("  slowdown  endpoint=%-35s  vu=%3d  ratio=%.2fx",
-                     endpoint, vu_count, ratio)
+            log.info("  pushed  endpoint=%-35s  vu=%3d  p95=%.3fs  rps=%.1f  err=%.3f  slowdown=%.2fx",
+                     endpoint, vu_count, s["p95"], s["rps"], s["err"], ratio)
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 
 def main():
@@ -246,9 +238,8 @@ def main():
                      entry.total_rps, entry.fail_ratio * 100)
 
         all_stages[vu_count] = stats_snapshot
-        _push_stage_metrics(stats_snapshot, vu_count)
 
-    _push_slowdown(all_stages)
+    _push_all_metrics(all_stages)
     env.runner.quit()
     log.info("Performance run complete.")
 
