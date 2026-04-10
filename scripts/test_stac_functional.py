@@ -8,21 +8,51 @@ Run with:
 Environment variables:
   STAC_URL          target API base (default: https://stac.eodc.eu/api/v1)
   E2E_ENV           env label (default: dev)
-  STAC_WRITE_TOKEN  Bearer token for item write access (skip ingest test if unset)
+  INGEST_URL        ingest API base URL (skip ingest test if unset)
+  INGEST_USER       basic-auth username for ingest API
+  INGEST_PASSWORD   basic-auth password for ingest API
 
 Metrics are pushed to Pushgateway by scripts/conftest.py after the session ends.
 """
 
 import os
 import time
-import uuid
 import pytest
 import requests
+from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse, parse_qs
 
-STAC_URL         = os.environ.get("STAC_URL", "https://stac.eodc.eu/api/v1")
-TIMEOUT          = 20
-STAC_WRITE_TOKEN = os.environ.get("STAC_WRITE_TOKEN")
+STAC_URL    = os.environ.get("STAC_URL", "https://stac.eodc.eu/api/v1")
+TIMEOUT     = 20
+INGEST_URL  = os.environ.get("INGEST_URL")
+INGEST_USER = os.environ.get("INGEST_USER")
+INGEST_PASS = os.environ.get("INGEST_PASSWORD")
+
+_INGEST_COLLECTION = "SENTINEL1_GRD"
+_INGEST_ITEM_ID    = "monitoring"
+_INGEST_ITEM = {
+    "type": "Feature",
+    "stac_version": "1.0.0",
+    "id": _INGEST_ITEM_ID,
+    "properties": {"datetime": "2023-07-20T00:00:00Z"},
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+            [31.80093,  77.341131], [31.964415, 77.391375],
+            [32.368193, 77.512526], [32.78097,  77.633047],
+            [33.202279, 77.752939], [33.631543, 77.872266],
+            [34.069244, 77.990875], [34.514775, 78.10891 ],
+            [34.969084, 78.226219], [35.072215, 78.252211],
+            [36.245595, 78.224194], [35.545752, 77.252124],
+            [31.80093,  77.341131],
+        ]],
+    },
+    "links": [],
+    "assets": {},
+    "bbox": [31.80093, 77.252124, 36.245595, 78.252211],
+    "stac_extensions": [],
+    "collection": _INGEST_COLLECTION,
+}
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -138,63 +168,48 @@ def test_pagination_no_overlap(collection_id):
     assert not overlap, f"page 1 and page 2 share item IDs: {overlap}"
 
 
-@pytest.mark.skipif(not STAC_WRITE_TOKEN, reason="STAC_WRITE_TOKEN not set")
-def test_ingest_visible_delete(collection_id):
+@pytest.mark.skipif(
+    not (INGEST_URL and INGEST_USER and INGEST_PASS),
+    reason="INGEST_URL / INGEST_USER / INGEST_PASSWORD not set",
+)
+def test_ingest_visible_delete():
     """
-    POST a test item, verify it appears in /search within 60 s, then DELETE it.
-    Requires STAC_WRITE_TOKEN to be set.
+    POST a test item via the ingest API (Basic auth), verify it appears in
+    /search within 60 s, then DELETE it via the ingest API.
+    Uses fixed collection SENTINEL1_GRD and item id 'monitoring'.
     """
-    test_item_id = f"test-e2e-{uuid.uuid4().hex[:12]}"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {STAC_WRITE_TOKEN}",
-    }
-    item = {
-        "type": "Feature",
-        "stac_version": "1.0.0",
-        "id": test_item_id,
-        "geometry": {
-            "type": "Point",
-            "coordinates": [0.0, 0.0],
-        },
-        "bbox": [0.0, 0.0, 0.0, 0.0],
-        "properties": {
-            "datetime": "2000-01-01T00:00:00Z",
-        },
-        "links": [],
-        "assets": {},
-        "collection": collection_id,
-    }
+    auth       = HTTPBasicAuth(INGEST_USER, INGEST_PASS)
+    base       = INGEST_URL.rstrip("/")
+    post_url   = f"{base}/collections/{_INGEST_COLLECTION}/items"
+    delete_url = f"{base}/collections/{_INGEST_COLLECTION}/items/{_INGEST_ITEM_ID}"
 
-    # POST the test item
-    post_url = f"{STAC_URL}/collections/{collection_id}/items"
-    r = requests.post(post_url, json=item, headers=headers, timeout=TIMEOUT)
+    # POST — on 409 conflict the item already exists; delete it and retry once
+    r = requests.post(post_url, json=_INGEST_ITEM, auth=auth, timeout=TIMEOUT)
+    if r.status_code == 409:
+        requests.delete(delete_url, auth=auth, timeout=TIMEOUT)
+        r = requests.post(post_url, json=_INGEST_ITEM, auth=auth, timeout=TIMEOUT)
     assert r.status_code in (200, 201), \
-        f"POST item failed with HTTP {r.status_code}: {r.text[:200]}"
+        f"POST failed: HTTP {r.status_code}: {r.text[:200]}"
 
     try:
-        # Poll /search until the item appears (up to 60 s)
+        # Poll STAC read API until the item appears (up to 60 s)
         visible = False
         for _ in range(12):
             time.sleep(5)
             rs = requests.post(
                 f"{STAC_URL}/search",
-                json={"ids": [test_item_id], "collections": [collection_id]},
+                json={"ids": [_INGEST_ITEM_ID], "collections": [_INGEST_COLLECTION]},
                 headers={"Content-Type": "application/json"},
                 timeout=TIMEOUT,
             )
             if rs.status_code == 200 and any(
-                f["id"] == test_item_id for f in rs.json().get("features", [])
+                f["id"] == _INGEST_ITEM_ID for f in rs.json().get("features", [])
             ):
                 visible = True
                 break
-        assert visible, f"item '{test_item_id}' not visible in /search after 60 s"
+        assert visible, f"item '{_INGEST_ITEM_ID}' not visible in /search after 60 s"
     finally:
-        # Always attempt cleanup
-        requests.delete(
-            f"{STAC_URL}/collections/{collection_id}/items/{test_item_id}",
-            headers=headers, timeout=TIMEOUT,
-        )
+        requests.delete(delete_url, auth=auth, timeout=TIMEOUT)
 
 
 def test_asset_href_format(collection_id):

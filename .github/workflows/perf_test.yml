@@ -30,7 +30,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests prometheus-client locust
+        run: pip install requests prometheus-client locust shapely
 
       - name: Configure environment
         run: |

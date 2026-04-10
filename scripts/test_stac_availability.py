@@ -23,9 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from e2e_helpers.prom import push_e2e_result
 from prometheus_client import CollectorRegistry, Gauge, generate_latest
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
+
 STAC_URL    = os.environ.get("STAC_URL", "https://stac.eodc.eu/api/v1")
 TIMEOUT     = int(os.environ.get("STAC_TIMEOUT", "20"))
 LOG_FILE    = "results/logs/test_stac_availability.log"
@@ -42,9 +40,6 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Pushgateway helper — requests.put to follow APISIX 301 redirects
-# ---------------------------------------------------------------------------
 
 def push_probe(probe_name: str, collection: str, success: bool,
                duration: float, http_status: int):
@@ -83,9 +78,6 @@ def push_probe(probe_name: str, collection: str, success: bool,
         log.warning("push_probe failed  probe=%s  collection=%s  error=%s",
                     probe_name, collection, e)
 
-# ---------------------------------------------------------------------------
-# HTTP helpers
-# ---------------------------------------------------------------------------
 
 def _timed_get(url, **kwargs):
     t0 = time.perf_counter()
@@ -124,10 +116,6 @@ def _validate_response(resp, expect_json=True):
         except Exception as e:
             return False, f"invalid JSON: {e}", code
     return True, "OK", code
-
-# ---------------------------------------------------------------------------
-# Probe functions
-# ---------------------------------------------------------------------------
 
 ProbeResult = dict  # keys: name, collection, success, duration, http_status, msg, extras
 
@@ -246,9 +234,6 @@ def probe_asset(col_id: str, asset_url: str) -> ProbeResult:
                 duration=dur, http_status=code,
                 msg="OK" if ok else f"HTTP {code}", extras={})
 
-# ---------------------------------------------------------------------------
-# Orchestrator
-# ---------------------------------------------------------------------------
 
 def run_all_probes() -> list:
     results = []
@@ -274,10 +259,6 @@ def run_all_probes() -> list:
         results.append(probe_asset(col_id, asset_url))
 
     return results
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main():
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)

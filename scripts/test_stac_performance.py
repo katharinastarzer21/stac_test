@@ -23,13 +23,17 @@ gevent.monkey.patch_all()
 import os
 import sys
 import time
+import random
 import logging
 import requests
 import gevent
+from datetime import datetime, timedelta
 from locust import HttpUser, task, between
 from locust.env import Environment
 from locust.log import setup_logging
 from prometheus_client import CollectorRegistry, Gauge, generate_latest
+from shapely.geometry import Polygon, mapping
+from shapely.validation import explain_validity
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -81,23 +85,73 @@ log.info("Performance probe collection: %s", PROBE_COLLECTION)
 
 class StacUser(HttpUser):
     host = STAC_URL
-    wait_time = between(0.5, 1.5)
+    wait_time = between(1, 3)
+    _collections: list = []
 
-    @task(2)
+    def on_start(self):
+        """Fetch all available collections once per VU at startup."""
+        resp = self.client.get("/collections", name="GET /collections")
+        if resp.status_code == 200:
+            self._collections = [
+                c["id"] for c in resp.json().get("collections", [])
+            ]
+        if not self._collections and PROBE_COLLECTION != "unknown":
+            self._collections = [PROBE_COLLECTION]
+
+    @task
     def search_post(self):
-        self.client.post(
-            "/search",
-            json={"collections": [PROBE_COLLECTION], "limit": 10},
-            name="POST /search",
-        )
+        """Realistic STAC search: random spatial polygon, datetime range, collection subset."""
+        query = {
+            "datetime":   self._random_datetime(),
+            "intersects": self._random_polygon(),
+            "collections": self._random_collections(),
+            "limit": 100,
+        }
+        self.client.post("/search", json=query, name="POST /search")
 
-    @task(1)
+    @task
     def get_items(self):
+        """GET items for a random collection."""
+        col = random.choice(self._collections) if self._collections else PROBE_COLLECTION
         self.client.get(
-            f"/collections/{PROBE_COLLECTION}/items",
+            f"/collections/{col}/items",
             params={"limit": 10},
             name="GET /collections/{id}/items",
         )
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _random_datetime() -> str:
+        start = datetime(2015, 1, 1)
+        end   = datetime(2025, 1, 1)
+        delta = int((end - start).total_seconds())
+        dates = sorted(
+            start + timedelta(seconds=random.randrange(delta)) for _ in range(2)
+        )
+        return f"{dates[0].isoformat()}Z/{dates[1].isoformat()}Z"
+
+    @staticmethod
+    def _random_polygon() -> dict:
+        center_lon = random.uniform(-180, 180)
+        center_lat = random.uniform(-90,   90)
+        pts = []
+        for _ in range(random.randint(3, 10)):
+            lon = max(min(center_lon + random.uniform(-10, 10), 180), -180)
+            lat = max(min(center_lat + random.uniform(-10, 10),  90), -90)
+            pts.append((lon, lat))
+        poly = Polygon(pts)
+        if not poly.is_valid:
+            poly = poly.buffer(0)
+        return mapping(poly)
+
+    def _random_collections(self) -> list:
+        if not self._collections:
+            return []
+        k = random.randint(1, min(len(self._collections), 5))
+        return random.sample(self._collections, k)
 
 # ---------------------------------------------------------------------------
 # Pushgateway helpers

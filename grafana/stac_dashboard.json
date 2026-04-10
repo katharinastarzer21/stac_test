@@ -2,25 +2,37 @@
   "title": "EODC STAC E2E Monitoring",
   "uid": "eodc-stac-e2e",
   "description": "Availability, functional correctness and performance monitoring for the EODC STAC API",
-  "tags": ["eodc", "stac", "e2e"],
+  "tags": [
+    "eodc",
+    "stac",
+    "e2e"
+  ],
   "timezone": "browser",
   "refresh": "1m",
   "schemaVersion": 41,
-  "version": 1,
+  "version": 2,
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "time": { "from": "now-6h", "to": "now" },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "links": [],
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "templating": {
     "list": [
       {
         "name": "env",
         "label": "Environment",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "definition": "label_values(eodc_e2e_probe_success, env)",
         "query": {
           "qryType": 1,
@@ -39,7 +51,10 @@
         "name": "collection",
         "label": "Collection",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "definition": "label_values(eodc_e2e_probe_success{env=\"$env\"}, collection)",
         "query": {
           "qryType": 1,
@@ -53,28 +68,48 @@
         "allValue": ".*",
         "hide": 0,
         "options": [],
-        "current": { "text": "All", "value": "$__all" }
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
       }
     ]
   },
   "panels": [
-
     {
       "id": 100,
       "type": "row",
       "title": "Availability",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
     },
-
     {
       "id": 1,
       "type": "stat",
       "title": "Overall Success",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
@@ -84,14 +119,24 @@
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "min": 0, "max": 1,
+          "min": 0,
+          "max": 1,
           "decimals": 1,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red",    "value": null },
-              { "color": "yellow", "value": 0.9 },
-              { "color": "green",  "value": 1.0 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.9
+              },
+              {
+                "color": "green",
+                "value": 1.0
+              }
             ]
           },
           "mappings": []
@@ -100,7 +145,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "avg(eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\"})",
           "legendFormat": "success",
           "instant": true,
@@ -108,15 +156,110 @@
         }
       ]
     },
-
+    {
+      "id": 3,
+      "type": "state-timeline",
+      "title": "Probe History \u2014 worst result across selected collections (green = OK, red = FAIL)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 20,
+        "x": 4,
+        "y": 1
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "alignValue": "left",
+        "rowHeight": 0.85,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 80,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "FAIL",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "OK",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "min by (probe) (eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\"})",
+          "legendFormat": "{{probe}}",
+          "refId": "A"
+        }
+      ]
+    },
     {
       "id": 2,
       "type": "stat",
       "title": "Last Run",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 5 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 5
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value",
@@ -129,14 +272,22 @@
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
           }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "timestamp(max(eodc_e2e_probe_success{env=\"$env\"})) * 1000",
           "legendFormat": "last run",
           "instant": true,
@@ -144,66 +295,378 @@
         }
       ]
     },
-
     {
-      "id": 3,
-      "type": "state-timeline",
-      "title": "Probe History (green = OK, red = FAIL)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 20, "x": 4, "y": 1 },
+      "id": 7,
+      "type": "stat",
+      "title": "Uptime (24h)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 9
+      },
       "options": {
-        "mergeValues": true,
-        "showValue": "never",
-        "alignValue": "left",
-        "rowHeight": 0.85,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
-          "custom": { "lineWidth": 0, "fillOpacity": 80, "spanNulls": false },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "avg_over_time(min(eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\", probe!=\"asset_fetch\"})[24h:30m]) * 100",
+          "legendFormat": "uptime",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Collection Health \u2014 worst probe per collection",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 20,
+        "x": 4,
+        "y": 13
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "color-background",
+            "filterable": true
+          },
           "mappings": [
             {
               "type": "value",
               "options": {
-                "0": { "text": "FAIL", "color": "red",   "index": 0 },
-                "1": { "text": "OK",   "color": "green", "index": 1 }
+                "0": {
+                  "text": "FAIL",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "OK",
+                  "color": "green",
+                  "index": 1
+                }
               }
             }
           ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red",   "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
       },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\"}",
-          "legendFormat": "{{probe}} · {{collection}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "min by (collection) (eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\"})",
+          "legendFormat": "{{collection}}",
+          "instant": true,
           "refId": "A"
         }
       ]
     },
-
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Failing Probes \u2014 currently broken (empty = all OK)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 20,
+        "x": 4,
+        "y": 21
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "collection",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "displayMode": "color-background",
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\"} == 0",
+          "legendFormat": "{{collection}} \u2014 {{probe}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Probe Duration",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 9 },
+      "title": "Probe Duration (avg across selected collections)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
       "options": {
-        "tooltip": { "mode": "multi", "sort": "desc" },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "right",
-          "calcs": ["lastNotNull", "max"],
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
           "showLegend": true
         }
       },
@@ -211,81 +674,231 @@
         "defaults": {
           "unit": "s",
           "custom": {
-            "lineWidth": 1,
+            "lineWidth": 2,
             "fillOpacity": 5,
             "gradientMode": "none",
             "spanNulls": false,
             "showPoints": "never"
           },
-          "color": { "mode": "palette-classic" }
+          "color": {
+            "mode": "palette-classic"
+          }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "eodc_e2e_probe_duration_seconds{env=\"$env\", collection=~\"$collection\"}",
-          "legendFormat": "{{probe}} · {{collection}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "avg by (probe) (eodc_e2e_probe_duration_seconds{env=\"$env\", collection=~\"$collection\"})",
+          "legendFormat": "{{probe}}",
           "refId": "A"
         }
       ]
     },
-
     {
       "id": 200,
       "type": "row",
       "title": "Functional",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 }
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      }
     },
-
+    {
+      "id": 201,
+      "type": "text",
+      "title": "",
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Note:** Functional tests run against a fixed collection (first available). The **Collection** filter above does not affect this row."
+      }
+    },
     {
       "id": 10,
       "type": "table",
       "title": "Test Results",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 10, "x": 0, "y": 17 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 0,
+        "y": 36
+      },
       "options": {
-        "sortBy": [{ "displayName": "test", "desc": false }],
-        "footer": { "show": false },
+        "sortBy": [
+          {
+            "displayName": "test",
+            "desc": false
+          }
+        ],
+        "footer": {
+          "show": false
+        },
         "frameIndex": 0,
         "showHeader": true
       },
       "fieldConfig": {
         "defaults": {
-          "custom": { "align": "left", "displayMode": "color-background", "filterable": false },
+          "custom": {
+            "align": "left",
+            "displayMode": "color-background",
+            "filterable": false
+          },
           "mappings": [
             {
               "type": "value",
               "options": {
-                "0": { "text": "FAIL", "color": "red",   "index": 0 },
-                "1": { "text": "PASS", "color": "green", "index": 1 }
+                "0": {
+                  "text": "FAIL",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "PASS",
+                  "color": "green",
+                  "index": 1
+                }
               }
             }
           ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red",   "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           },
-          "color": { "mode": "thresholds" }
+          "color": {
+            "mode": "thresholds"
+          }
         },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Time" },    "properties": [{ "id": "custom.hidden", "value": true }] },
-          { "matcher": { "id": "byName", "options": "job" },     "properties": [{ "id": "custom.hidden", "value": true }] },
-          { "matcher": { "id": "byName", "options": "service" }, "properties": [{ "id": "custom.hidden", "value": true }] },
-          { "matcher": { "id": "byName", "options": "env" },     "properties": [{ "id": "custom.hidden", "value": true }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "exported_job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "instance"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
         ]
       },
       "transformations": [
-        { "id": "labelsToFields", "options": { "mode": "columns" } },
-        { "id": "merge", "options": {} }
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        }
       ],
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "eodc_e2e_functional_success{env=\"$env\"}",
           "legendFormat": "{{test}}",
           "instant": true,
@@ -293,13 +906,20 @@
         }
       ]
     },
-
     {
       "id": 11,
       "type": "barchart",
       "title": "Test Duration",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 10, "x": 10, "y": 17 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 10,
+        "y": 36
+      },
       "options": {
         "orientation": "horizontal",
         "xTickLabelRotation": 0,
@@ -308,20 +928,35 @@
         "barWidth": 0.97,
         "barRadius": 0,
         "fullHighlight": false,
-        "tooltip": { "mode": "single", "sort": "none" },
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false }
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 1, "fillOpacity": 80 }
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80
+          }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "eodc_e2e_functional_duration_seconds{env=\"$env\"}",
           "legendFormat": "{{test}}",
           "instant": true,
@@ -329,15 +964,26 @@
         }
       ]
     },
-
     {
       "id": 12,
       "type": "stat",
       "title": "Last Run",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 17 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 36
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value",
@@ -348,13 +994,24 @@
         "defaults": {
           "unit": "dateTimeAsLocal",
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "max(eodc_e2e_functional_last_run_timestamp{env=\"$env\"}) * 1000",
           "legendFormat": "last run",
           "instant": true,
@@ -362,15 +1019,26 @@
         }
       ]
     },
-
     {
       "id": 13,
       "type": "stat",
       "title": "Pass Rate",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 21 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 40
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "background",
@@ -380,14 +1048,24 @@
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "min": 0, "max": 1,
+          "min": 0,
+          "max": 1,
           "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red",    "value": null },
-              { "color": "yellow", "value": 0.8 },
-              { "color": "green",  "value": 1.0 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.8
+              },
+              {
+                "color": "green",
+                "value": 1.0
+              }
             ]
           },
           "mappings": []
@@ -396,7 +1074,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "avg(eodc_e2e_functional_success{env=\"$env\"})",
           "legendFormat": "pass rate",
           "instant": true,
@@ -404,116 +1085,161 @@
         }
       ]
     },
-
     {
       "id": 300,
       "type": "row",
       "title": "Performance",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 }
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      }
     },
-
     {
-      "id": 20,
-      "type": "timeseries",
-      "title": "p95 Response Time",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 26 },
+      "id": 301,
+      "type": "text",
+      "title": "",
+      "datasource": null,
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 45
+      },
       "options": {
-        "tooltip": { "mode": "multi", "sort": "desc" },
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+        "mode": "markdown",
+        "content": "**Note:** Performance tests run against a fixed collection on-demand only. The **Collection** filter above does not affect this row. Trigger the performance workflow manually to update these values."
+      }
+    },
+    {
+      "id": 30,
+      "type": "stat",
+      "title": "p95 \u2014 POST /search and GET /items",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 47
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "showPoints": "never",
-            "spanNulls": false
-          },
-          "color": { "mode": "palette-classic" }
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "eodc_e2e_perf_p95_seconds{env=\"$env\"}",
           "legendFormat": "{{endpoint}}",
+          "instant": true,
           "refId": "A"
         }
       ]
     },
-
-    {
-      "id": 21,
-      "type": "timeseries",
-      "title": "Requests per Second",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 26 },
-      "options": {
-        "tooltip": { "mode": "multi", "sort": "desc" },
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "showPoints": "never",
-            "spanNulls": false
-          },
-          "color": { "mode": "palette-classic" }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "eodc_e2e_perf_rps{env=\"$env\"}",
-          "legendFormat": "{{endpoint}}",
-          "refId": "A"
-        }
-      ]
-    },
-
     {
       "id": 22,
-      "type": "gauge",
-      "title": "Error Rate",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 33 },
+      "type": "stat",
+      "title": "Error Rate \u2014 POST /search and GET /items",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 47
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       },
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "min": 0, "max": 1,
+          "min": 0,
+          "max": 1,
           "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green",  "value": null },
-              { "color": "yellow", "value": 0.01 },
-              { "color": "red",    "value": 0.05 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
             ]
           },
-          "mappings": [],
-          "color": { "mode": "thresholds" }
+          "mappings": []
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "eodc_e2e_perf_error_rate{env=\"$env\"}",
           "legendFormat": "{{endpoint}}",
           "instant": true,
@@ -521,15 +1247,26 @@
         }
       ]
     },
-
     {
       "id": 23,
       "type": "stat",
-      "title": "VUs (last run)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 33 },
+      "title": "VUs",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 2,
+        "x": 20,
+        "y": 47
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value",
@@ -541,13 +1278,24 @@
           "unit": "short",
           "decimals": 0,
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "eodc_e2e_perf_vus{env=\"$env\"}",
           "legendFormat": "VUs",
           "instant": true,
@@ -555,15 +1303,26 @@
         }
       ]
     },
-
     {
       "id": 24,
       "type": "stat",
       "title": "Last Run",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 33 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 2,
+        "x": 22,
+        "y": 47
+      },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "auto",
         "textMode": "auto",
         "colorMode": "value",
@@ -574,20 +1333,194 @@
         "defaults": {
           "unit": "dateTimeAsLocal",
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "max(eodc_e2e_perf_last_run_timestamp{env=\"$env\"}) * 1000",
           "legendFormat": "last run",
           "instant": true,
           "refId": "A"
         }
       ]
+    },
+    {
+      "id": 32,
+      "type": "stat",
+      "title": "RPS \u2014 POST /search and GET /items",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 51
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "eodc_e2e_perf_rps{env=\"$env\"}",
+          "legendFormat": "{{endpoint}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "p95 Response Time (trend)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 55
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "eodc_e2e_perf_p95_seconds{env=\"$env\"}",
+          "legendFormat": "{{endpoint}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Requests per Second (trend)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 55
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "eodc_e2e_perf_rps{env=\"$env\"}",
+          "legendFormat": "{{endpoint}}",
+          "refId": "A"
+        }
+      ]
     }
-
   ]
 }

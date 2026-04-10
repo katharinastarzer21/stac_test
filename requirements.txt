@@ -2,3 +2,4 @@ requests
 prometheus-client
 pytest
 locust
+shapely

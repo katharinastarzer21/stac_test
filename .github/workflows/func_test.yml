@@ -35,7 +35,9 @@ jobs:
           echo "PUSHGATEWAY_URL=${{ secrets.PUSHGATEWAY_ENDPOINT }}"      >> $GITHUB_ENV
           echo "PUSHGATEWAY_USERNAME=${{ secrets.PUSHGATEWAY_USERNAME }}"  >> $GITHUB_ENV
           echo "PUSHGATEWAY_PASSWORD=${{ secrets.PUSHGATEWAY_PASSWORD }}"  >> $GITHUB_ENV
-          echo "STAC_WRITE_TOKEN=${{ secrets.STAC_WRITE_TOKEN }}"         >> $GITHUB_ENV
+          echo "INGEST_URL=${{ secrets.INGEST_URL }}"                       >> $GITHUB_ENV
+          echo "INGEST_USER=${{ secrets.INGEST_USER }}"                     >> $GITHUB_ENV
+          echo "INGEST_PASSWORD=${{ secrets.INGEST_PASSWORD }}"             >> $GITHUB_ENV
 
       - name: Run functional tests
         run: pytest scripts/test_stac_functional.py -v --tb=short
@@ -63,7 +65,9 @@ jobs:
           echo "PUSHGATEWAY_URL=${{ secrets.PUSHGATEWAY_ENDPOINT }}"      >> $GITHUB_ENV
           echo "PUSHGATEWAY_USERNAME=${{ secrets.PUSHGATEWAY_USERNAME }}"  >> $GITHUB_ENV
           echo "PUSHGATEWAY_PASSWORD=${{ secrets.PUSHGATEWAY_PASSWORD }}"  >> $GITHUB_ENV
-          echo "STAC_WRITE_TOKEN=${{ secrets.STAC_WRITE_TOKEN }}"         >> $GITHUB_ENV
+          echo "INGEST_URL=${{ secrets.INGEST_URL }}"                       >> $GITHUB_ENV
+          echo "INGEST_USER=${{ secrets.INGEST_USER }}"                     >> $GITHUB_ENV
+          echo "INGEST_PASSWORD=${{ secrets.INGEST_PASSWORD }}"             >> $GITHUB_ENV
 
       - name: Run functional tests
         run: pytest scripts/test_stac_functional.py -v --tb=short
