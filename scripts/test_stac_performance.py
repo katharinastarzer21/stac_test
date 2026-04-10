@@ -5,8 +5,7 @@ STAC API load test — headless Locust runner.
 Runs four VU stages (10 → 25 → 50 → 100 users, 60 s each) against the STAC
 search and items endpoints, then pushes per-endpoint perf metrics to Pushgateway.
 
-Run on demand only (workflow_dispatch in CI, or directly for local testing):
-  python scripts/test_stac_performance.py
+Run on demand only (workflow_dispatch in CI)
 
 Environment variables:
   STAC_URL               target API base (default: https://stac.eodc.eu/api/v1)
@@ -125,7 +124,7 @@ def _push(grouping_key: dict, reg: CollectorRegistry):
 def _push_stage_metrics(stats_snapshot: dict, vu_count: int):
     now = time.time()
     for endpoint, s in stats_snapshot.items():
-        safe = endpoint.replace("/", "_").replace("{", "").replace("}", "").strip("_")
+        safe = endpoint.replace(" ", "").replace("/", "_").replace("{", "").replace("}", "").strip("_")
         reg = CollectorRegistry()
         Gauge("eodc_e2e_perf_p95_seconds",
               "p95 response time in seconds", registry=reg).set(s["p95"])
