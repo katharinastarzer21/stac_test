@@ -191,7 +191,7 @@ def _push_stage_metrics(stats_snapshot: dict, vu_count: int):
         # include timestamp in every per-endpoint push so it is always reachable
         Gauge("eodc_e2e_perf_last_run_timestamp",
               "unix timestamp of last performance run", registry=reg).set(now)
-        _push({"env": ENV, "service": SERVICE, "endpoint": safe}, reg)
+        _push({"env": ENV, "service": SERVICE, "endpoint": safe, "vus": str(vu_count)}, reg)
         log.info("  pushed  endpoint=%-35s  vu=%3d  p95=%.3fs  rps=%.1f  err=%.3f",
                  endpoint, vu_count, s["p95"], s["rps"], s["err"])
 
@@ -199,11 +199,32 @@ def _push_stage_metrics(stats_snapshot: dict, vu_count: int):
 # Main
 # ---------------------------------------------------------------------------
 
+def _push_slowdown(all_stages: dict):
+    """Push slowdown ratio vs the lowest-VU baseline for each endpoint."""
+    baseline_vu = VU_STAGES[0]
+    baseline = all_stages.get(baseline_vu, {})
+    now = time.time()
+    for vu_count, stats in all_stages.items():
+        for endpoint, s in stats.items():
+            safe = endpoint.replace(" ", "").replace("/", "_").replace("{", "").replace("}", "").strip("_")
+            base_p95 = baseline.get(endpoint, {}).get("p95", 0)
+            ratio = s["p95"] / base_p95 if base_p95 > 0 else 1.0
+            reg = CollectorRegistry()
+            Gauge("eodc_e2e_perf_slowdown_ratio",
+                  f"p95 slowdown vs {baseline_vu}-VU baseline", registry=reg).set(ratio)
+            Gauge("eodc_e2e_perf_last_run_timestamp",
+                  "unix timestamp of last performance run", registry=reg).set(now)
+            _push({"env": ENV, "service": SERVICE, "endpoint": safe, "vus": str(vu_count)}, reg)
+            log.info("  slowdown  endpoint=%-35s  vu=%3d  ratio=%.2fx",
+                     endpoint, vu_count, ratio)
+
+
 def main():
     setup_logging("INFO")
     env = Environment(user_classes=[StacUser])
     env.create_local_runner()
 
+    all_stages = {}
     for vu_count in VU_STAGES:
         log.info("Starting stage  VUs=%d  duration=%ds", vu_count, STAGE_SECS)
         env.stats.reset_all()
@@ -224,8 +245,10 @@ def main():
                      method, name, p95_ms / 1000.0,
                      entry.total_rps, entry.fail_ratio * 100)
 
+        all_stages[vu_count] = stats_snapshot
         _push_stage_metrics(stats_snapshot, vu_count)
 
+    _push_slowdown(all_stages)
     env.runner.quit()
     log.info("Performance run complete.")
 
