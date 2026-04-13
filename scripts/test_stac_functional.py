@@ -60,6 +60,9 @@ _INGEST_ITEM = {
 
 @pytest.fixture(scope="module")
 def collection_id():
+    override = os.environ.get("STAC_FUNCTIONAL_COLLECTION")
+    if override:
+        return override
     r = requests.get(f"{STAC_URL}/collections", timeout=TIMEOUT)
     r.raise_for_status()
     cols = r.json().get("collections", [])

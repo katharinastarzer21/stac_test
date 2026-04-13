@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 SERVICE     = "stac"
 ENV         = os.environ.get("E2E_ENV", "dev")
+COLLECTION  = os.environ.get("STAC_FUNCTIONAL_COLLECTION", "auto")
 PUSHGW_URL  = os.environ.get("PUSHGATEWAY_URL")
 PUSHGW_USER = os.environ.get("PUSHGATEWAY_USERNAME")
 PUSHGW_PASS = os.environ.get("PUSHGATEWAY_PASSWORD")
@@ -43,7 +44,7 @@ def pytest_sessionfinish(session, exitstatus):
         # include timestamp in every per-test push so it is always reachable
         Gauge("eodc_e2e_functional_last_run_timestamp",
               "unix timestamp of last functional run", registry=reg).set(now)
-        _push({"env": ENV, "service": SERVICE, "test": r["test"]}, reg)
+        _push({"env": ENV, "service": SERVICE, "test": r["test"], "collection": COLLECTION}, reg)
 
 
 def _push(grouping_key: dict, reg: CollectorRegistry):

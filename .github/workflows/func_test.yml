@@ -10,6 +10,11 @@ on:
       - "scripts/test_stac_functional.py"
       - "scripts/conftest.py"
   workflow_dispatch:
+    inputs:
+      collection:
+        description: "Collection ID to test (leave empty for auto-detect)"
+        required: false
+        default: ""
 
 jobs:
   functional-prod:
@@ -35,9 +40,7 @@ jobs:
           echo "PUSHGATEWAY_URL=${{ secrets.PUSHGATEWAY_ENDPOINT }}"      >> $GITHUB_ENV
           echo "PUSHGATEWAY_USERNAME=${{ secrets.PUSHGATEWAY_USERNAME }}"  >> $GITHUB_ENV
           echo "PUSHGATEWAY_PASSWORD=${{ secrets.PUSHGATEWAY_PASSWORD }}"  >> $GITHUB_ENV
-          echo "INGEST_URL=${{ secrets.INGEST_URL }}"                       >> $GITHUB_ENV
-          echo "INGEST_USER=${{ secrets.INGEST_USER }}"                     >> $GITHUB_ENV
-          echo "INGEST_PASSWORD=${{ secrets.INGEST_PASSWORD }}"             >> $GITHUB_ENV
+          echo "STAC_FUNCTIONAL_COLLECTION=${{ github.event.inputs.collection }}" >> $GITHUB_ENV
 
       - name: Run functional tests
         run: pytest scripts/test_stac_functional.py -v --tb=short
@@ -68,6 +71,7 @@ jobs:
           echo "INGEST_URL=${{ secrets.INGEST_URL }}"                       >> $GITHUB_ENV
           echo "INGEST_USER=${{ secrets.INGEST_USER }}"                     >> $GITHUB_ENV
           echo "INGEST_PASSWORD=${{ secrets.INGEST_PASSWORD }}"             >> $GITHUB_ENV
+          echo "STAC_FUNCTIONAL_COLLECTION=${{ github.event.inputs.collection }}" >> $GITHUB_ENV
 
       - name: Run functional tests
         run: pytest scripts/test_stac_functional.py -v --tb=short
