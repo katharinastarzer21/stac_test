@@ -54,6 +54,8 @@ def push_probe(probe_name: str, collection: str, success: bool,
           "probe duration in seconds", registry=reg).set(float(duration))
     Gauge("eodc_e2e_probe_http_status",
           "last HTTP status code (0 = network error)", registry=reg).set(float(http_status))
+    Gauge("eodc_e2e_probe_last_run_timestamp",
+          "unix timestamp of last probe run", registry=reg).set(time.time())
 
     grouping_key = {"env": ENV, "service": SERVICE, "probe": probe_name}
     if collection:

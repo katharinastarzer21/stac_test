@@ -238,7 +238,8 @@
           "legendFormat": "{{probe}}",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "One row per probe type. Red = any selected collection failing that probe.\n\n\u2022 **root** \u2014 GET / \u2014 checks the STAC root endpoint responds with valid JSON\n\u2022 **collections_list** \u2014 GET /collections \u2014 checks the API lists collections\n\u2022 **collection_detail** \u2014 GET /collections/{id} \u2014 checks a specific collection loads\n\u2022 **items_list** \u2014 GET /collections/{id}/items \u2014 checks the items endpoint returns features\n\u2022 **search_post** \u2014 POST /search \u2014 checks the search index works and returns results\n\u2022 **asset_fetch** \u2014 HEAD on asset URL \u2014 checks data.eodc.eu asset URLs are reachable"
     },
     {
       "id": 2,
@@ -288,7 +289,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "timestamp(max(eodc_e2e_probe_success{env=\"$env\"})) * 1000",
+          "expr": "max(eodc_e2e_probe_last_run_timestamp{env=\"$env\"}) * 1000",
           "legendFormat": "last run",
           "instant": true,
           "refId": "A"
@@ -653,7 +654,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 31
       },
       "options": {
         "tooltip": {
@@ -707,7 +708,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 38
       }
     },
     {
@@ -719,11 +720,11 @@
         "h": 2,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 39
       },
       "options": {
         "mode": "markdown",
-        "content": "**Note:** Functional tests run against a fixed collection (first available). The **Collection** filter above does not affect this row."
+        "content": "### What each functional test checks\n\n| Test | What it does |\n|------|--------------|\n| **test_collections_not_empty** | GET /collections \u2014 verifies at least one collection exists |\n| **test_known_item_exists** | GET /collections/{id}/items/{item_id} \u2014 verifies a known item can be fetched by ID |\n| **test_search_with_collection_filter** | POST /search with collection filter \u2014 verifies search returns non-empty results |\n| **test_pagination_no_overlap** | Fetches page 1 and page 2 of /items \u2014 verifies no item appears on both pages |\n| **test_ingest_visible_delete** | Posts a test item via ingest API, waits up to 60 s for it to appear in /search, then deletes it \u2014 dev only |\n| **test_asset_href_format** | Checks all asset hrefs in item responses use a valid URL scheme (http / https / s3) |\n\n**Note:** Tests run against the first available collection unless `STAC_FUNCTIONAL_COLLECTION` is set. The Collection filter above does not affect these tests."
       }
     },
     {
@@ -738,7 +739,7 @@
         "h": 8,
         "w": 10,
         "x": 0,
-        "y": 36
+        "y": 41
       },
       "options": {
         "sortBy": [
@@ -918,7 +919,7 @@
         "h": 8,
         "w": 10,
         "x": 10,
-        "y": 36
+        "y": 41
       },
       "options": {
         "orientation": "horizontal",
@@ -976,7 +977,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 36
+        "y": 41
       },
       "options": {
         "reduceOptions": {
@@ -1031,7 +1032,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 40
+        "y": 45
       },
       "options": {
         "reduceOptions": {
@@ -1094,7 +1095,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 49
       }
     },
     {
@@ -1106,7 +1107,7 @@
         "h": 2,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 50
       },
       "options": {
         "mode": "markdown",
@@ -1125,7 +1126,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 47
+        "y": 52
       },
       "options": {
         "reduceOptions": {
@@ -1172,7 +1173,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_p95_seconds{env=\"$env\"}",
+          "expr": "max by (endpoint) (eodc_e2e_perf_p95_seconds{env=\"$env\"})",
           "legendFormat": "{{endpoint}}",
           "instant": true,
           "refId": "A"
@@ -1191,7 +1192,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 47
+        "y": 52
       },
       "options": {
         "reduceOptions": {
@@ -1240,7 +1241,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_error_rate{env=\"$env\"}",
+          "expr": "max by (endpoint) (eodc_e2e_perf_error_rate{env=\"$env\"})",
           "legendFormat": "{{endpoint}}",
           "instant": true,
           "refId": "A"
@@ -1259,7 +1260,7 @@
         "h": 4,
         "w": 2,
         "x": 20,
-        "y": 47
+        "y": 52
       },
       "options": {
         "reduceOptions": {
@@ -1296,7 +1297,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_vus{env=\"$env\"}",
+          "expr": "max (eodc_e2e_perf_vus{env=\"$env\"})",
           "legendFormat": "VUs",
           "instant": true,
           "refId": "A"
@@ -1315,7 +1316,7 @@
         "h": 4,
         "w": 2,
         "x": 22,
-        "y": 47
+        "y": 52
       },
       "options": {
         "reduceOptions": {
@@ -1370,7 +1371,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 51
+        "y": 56
       },
       "options": {
         "reduceOptions": {
@@ -1409,7 +1410,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_rps{env=\"$env\"}",
+          "expr": "max by (endpoint) (eodc_e2e_perf_rps{env=\"$env\"})",
           "legendFormat": "{{endpoint}}",
           "instant": true,
           "refId": "A"
@@ -1428,7 +1429,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 55
+        "y": 60
       },
       "options": {
         "tooltip": {
@@ -1463,8 +1464,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_p95_seconds{env=\"$env\"}",
-          "legendFormat": "{{endpoint}}",
+          "expr": "max by (endpoint, vus) (eodc_e2e_perf_p95_seconds{env=\"$env\"})",
+          "legendFormat": "{{endpoint}} \u2014 {{vus}} VUs",
           "refId": "A"
         }
       ]
@@ -1481,7 +1482,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 55
+        "y": 60
       },
       "options": {
         "tooltip": {
@@ -1516,8 +1517,380 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_rps{env=\"$env\"}",
-          "legendFormat": "{{endpoint}}",
+          "expr": "max by (endpoint, vus) (eodc_e2e_perf_rps{env=\"$env\"})",
+          "legendFormat": "{{endpoint}} \u2014 {{vus}} VUs",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "type": "barchart",
+      "title": "p95 Response Time by VU Count (degradation curve)",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "gradientMode": "none"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "barWidth": 0.6,
+        "groupWidth": 0.75,
+        "stacking": "none",
+        "fillOpacity": 80,
+        "gradientMode": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200,
+        "xField": "VUs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sort_desc(max by (vus) (eodc_e2e_perf_p95_seconds{env=\"$env\", endpoint=\"POST_search\"}))",
+          "legendFormat": "POST /search",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sort_desc(max by (vus) (eodc_e2e_perf_p95_seconds{env=\"$env\", endpoint=\"GET_collections_id_items\"}))",
+          "legendFormat": "GET /items",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "keepLabels": [
+              "vus"
+            ]
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "include": []
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "vus": "VUs",
+              "Value (POST /search)": "POST /search p95",
+              "Value (GET /items)": "GET /items p95"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 4
+              }
+            ]
+          },
+          "unit": "x"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 71
+      },
+      "id": 41,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (vus, endpoint) (eodc_e2e_perf_slowdown_ratio{env=\"$env\"})",
+          "instant": true,
+          "legendFormat": "{{endpoint}} \u2014 {{vus}} VUs",
+          "refId": "A"
+        }
+      ],
+      "title": "Slowdown vs baseline (10 VUs)",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "vus",
+              "endpoint"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "desc": false,
+                "displayName": "vus"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 4
+              }
+            ]
+          },
+          "unit": "x"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 71
+      },
+      "id": 42,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (vus, endpoint) (eodc_e2e_perf_slowdown_ratio{env=\"$env\"})",
+          "instant": true,
+          "legendFormat": "{{vus}} VUs \u2014 {{endpoint}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Slowdown vs baseline (10 VUs)",
+      "type": "bargauge"
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "API Up / Down \u2014 dev and prod",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "custom": {
+            "lineInterpolation": "stepBefore",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "hidden"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "min by (env) (eodc_e2e_probe_success{collection=~\"$collection\", probe!=\"asset_fetch\"})",
+          "legendFormat": "{{env}}",
           "refId": "A"
         }
       ]

@@ -635,7 +635,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
             "axisBorderShow": false,
@@ -646,7 +646,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 5,
+            "fillOpacity": 20,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -654,13 +654,13 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "stepBefore",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -670,18 +670,91 @@
               "mode": "off"
             }
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "max": 1,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "red"
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 1
               }
             ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "hidden",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "min by (env) (eodc_e2e_probe_success{env=\"$env\", collection=~\"$collection\", probe!=\"asset_fetch\"})",
+          "legendFormat": "API status",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "API Up / Down",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false
           },
           "unit": "s"
         },
@@ -691,7 +764,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 27
       },
       "id": 4,
       "options": {
@@ -705,12 +778,10 @@
           "showLegend": true
         },
         "tooltip": {
-          "hideZeros": false,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
@@ -731,7 +802,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 29
+        "y": 34
       },
       "id": 200,
       "panels": [],
@@ -747,19 +818,13 @@
         "h": 2,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 35
       },
       "id": 201,
       "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
         "content": "**Note:** Functional tests run against a fixed collection (first available). The **Collection** filter above does not affect this row.",
         "mode": "markdown"
       },
-      "pluginVersion": "12.0.2",
       "title": "",
       "type": "text"
     },
@@ -775,11 +840,8 @@
           },
           "custom": {
             "align": "left",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "inspect": false
+            "displayMode": "color-background",
+            "filterable": false
           },
           "mappings": [
             {
@@ -863,24 +925,36 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "eodc_e2e_functional_success"
+              "options": "__name__"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 225
+                "id": "custom.hidden",
+                "value": true
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "__name__"
+              "options": "exported_job"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 239
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "instance"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
               }
             ]
           }
@@ -890,17 +964,11 @@
         "h": 8,
         "w": 10,
         "x": 0,
-        "y": 32
+        "y": 37
       },
       "id": 10,
       "options": {
-        "cellHeight": "sm",
         "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
           "show": false
         },
         "frameIndex": 0,
@@ -912,14 +980,12 @@
           }
         ]
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "editorMode": "code",
           "expr": "eodc_e2e_functional_success{env=\"$env\"}",
           "instant": true,
           "legendFormat": "{{test}}",
@@ -952,38 +1018,8 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
             "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "lineWidth": 1
           },
           "unit": "s"
         },
@@ -993,7 +1029,7 @@
         "h": 8,
         "w": 10,
         "x": 10,
-        "y": 32
+        "y": 37
       },
       "id": 11,
       "options": {
@@ -1002,24 +1038,18 @@
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
-          "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": false
         },
         "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
         "tooltip": {
-          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         },
         "xTickLabelMaxLength": 30,
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "xTickLabelRotation": 0
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
@@ -1059,7 +1089,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 32
+        "y": 37
       },
       "id": 12,
       "options": {
@@ -1067,19 +1097,13 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+          ]
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
@@ -1130,7 +1154,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 36
+        "y": 41
       },
       "id": 13,
       "options": {
@@ -1138,19 +1162,13 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+          ]
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
@@ -1172,7 +1190,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 45
       },
       "id": 300,
       "panels": [],
@@ -1188,19 +1206,13 @@
         "h": 2,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 46
       },
       "id": 301,
       "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
         "content": "**Note:** Performance tests run against a fixed collection on-demand only. The **Collection** filter above does not affect this row. Trigger the performance workflow manually to update these values.",
         "mode": "markdown"
       },
-      "pluginVersion": "12.0.2",
       "title": "",
       "type": "text"
     },
@@ -1237,7 +1249,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 43
+        "y": 48
       },
       "id": 30,
       "options": {
@@ -1245,7 +1257,6 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1253,87 +1264,21 @@
           "fields": "",
           "values": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "editorMode": "code",
-          "expr": "eodc_e2e_perf_p95_seconds",
+          "expr": "max by (endpoint) (eodc_e2e_perf_p95_seconds{env=\"$env\"})",
           "instant": true,
-          "legendFormat": "p95",
+          "legendFormat": "{{endpoint}}",
           "refId": "A"
         }
       ],
-      "title": "p95 — POST /search and GET /search",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 1,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue"
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 43
-      },
-      "id": 33,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.0.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "eodc_e2e_perf_rps",
-          "instant": true,
-          "legendFormat": "RPS",
-          "refId": "A"
-        }
-      ],
-      "title": "RPS — POST and GET /collections/{id}/items",
+      "title": "p95 — POST /search and GET /items",
       "type": "stat"
     },
     {
@@ -1371,7 +1316,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 43
+        "y": 48
       },
       "id": 22,
       "options": {
@@ -1379,7 +1324,6 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1387,25 +1331,21 @@
           "fields": "",
           "values": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "editorMode": "code",
-          "expr": "eodc_e2e_perf_error_rate",
+          "expr": "max by (endpoint) (eodc_e2e_perf_error_rate{env=\"$env\"})",
           "instant": true,
-          "legendFormat": "error rate",
+          "legendFormat": "{{endpoint}}",
           "refId": "A"
         }
       ],
-      "title": "Error Rate — POST /search and  GET /search",
+      "title": "Error Rate — POST /search and GET /items",
       "type": "stat"
     },
     {
@@ -1431,9 +1371,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 16,
-        "y": 43
+        "w": 2,
+        "x": 20,
+        "y": 48
       },
       "id": 23,
       "options": {
@@ -1441,26 +1381,20 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+          ]
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_vus{env=\"$env\"}",
+          "expr": "max (eodc_e2e_perf_vus{env=\"$env\"})",
           "instant": true,
           "legendFormat": "VUs",
           "refId": "A"
@@ -1491,9 +1425,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 19,
-        "y": 43
+        "w": 2,
+        "x": 22,
+        "y": 48
       },
       "id": 24,
       "options": {
@@ -1501,19 +1435,13 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+          ]
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
@@ -1536,92 +1464,107 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
+          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue"
               }
             ]
           },
-          "unit": "s"
+          "unit": "reqps"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
+        "h": 4,
+        "w": 6,
         "x": 0,
-        "y": 47
+        "y": 52
       },
-      "id": 20,
+      "id": 32,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "textMode": "auto"
       },
-      "pluginVersion": "12.0.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_p95_seconds{env=\"$env\"}",
+          "expr": "max by (endpoint) (eodc_e2e_perf_rps{env=\"$env\"})",
+          "instant": true,
           "legendFormat": "{{endpoint}}",
           "refId": "A"
         }
       ],
-      "title": "p95 Response Time (trend)",
+      "title": "RPS — POST /search and GET /items",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (endpoint, vus) (eodc_e2e_perf_rps{env=\"$env\"})",
+          "legendFormat": "{{endpoint}} — {{vus}} VUs",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests per Second (trend)",
       "type": "timeseries"
     },
     {
@@ -1635,38 +1578,176 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
             "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
             "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "spanNulls": false
           },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (endpoint, vus) (eodc_e2e_perf_p95_seconds{env=\"$env\"})",
+          "legendFormat": "{{endpoint}} — {{vus}} VUs",
+          "refId": "A"
+        }
+      ],
+      "title": "p95 Response Time (trend)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "lineWidth": 1
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 63
+      },
+      "id": 40,
+      "options": {
+        "barWidth": 0.6,
+        "fillOpacity": 80,
+        "gradientMode": "none",
+        "groupWidth": 0.75,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "VUs",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sort_desc(max by (vus) (eodc_e2e_perf_p95_seconds{env=\"$env\", endpoint=\"POST_search\"}))",
+          "instant": true,
+          "legendFormat": "POST /search",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sort_desc(max by (vus) (eodc_e2e_perf_p95_seconds{env=\"$env\", endpoint=\"GET_collections_id_items\"}))",
+          "instant": true,
+          "legendFormat": "GET /items",
+          "refId": "B"
+        }
+      ],
+      "title": "p95 Response Time by VU Count (degradation curve)",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "vus"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "include": [],
+            "reducers": [
+              "lastNotNull"
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value (GET /items)": "GET /items p95",
+              "Value (POST /search)": "POST /search p95",
+              "vus": "VUs"
+            }
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1675,34 +1756,37 @@
                 "color": "green"
               },
               {
+                "color": "yellow",
+                "value": 2
+              },
+              {
                 "color": "red",
-                "value": 80
+                "value": 4
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "x"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 47
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 71
       },
-      "id": 21,
+      "id": 41,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "showHeader": true
       },
       "pluginVersion": "12.0.2",
       "targets": [
@@ -1711,13 +1795,122 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "eodc_e2e_perf_rps{env=\"$env\"}",
-          "legendFormat": "{{endpoint}}",
+          "expr": "max by (vus, endpoint) (eodc_e2e_perf_slowdown_ratio{env=\"$env\"})",
+          "instant": true,
+          "legendFormat": "{{endpoint}} — {{vus}} VUs",
           "refId": "A"
         }
       ],
-      "title": "Requests per Second (trend)",
-      "type": "timeseries"
+      "title": "Slowdown vs baseline (10 VUs)",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "keepLabels": [
+              "vus",
+              "endpoint"
+            ],
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "desc": false,
+                "displayName": "vus"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 4
+              }
+            ]
+          },
+          "unit": "x"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 71
+      },
+      "id": 42,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (vus, endpoint) (eodc_e2e_perf_slowdown_ratio{env=\"$env\"})",
+          "instant": true,
+          "legendFormat": "{{vus}} VUs — {{endpoint}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Slowdown vs baseline (10 VUs)",
+      "type": "bargauge"
     }
   ],
   "preload": false,
@@ -1732,8 +1925,8 @@
     "list": [
       {
         "current": {
-          "text": "dev",
-          "value": "dev"
+          "text": "prod",
+          "value": "prod"
         },
         "datasource": {
           "type": "prometheus",
@@ -1757,7 +1950,9 @@
         "allValue": ".*",
         "current": {
           "text": "All",
-          "value": "$__all"
+          "value": [
+            "$__all"
+          ]
         },
         "datasource": {
           "type": "prometheus",
@@ -1781,12 +1976,12 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "EODC STAC E2E Monitoring",
   "uid": "eodc-stac-e2e",
-  "version": 14
+  "version": 28
 }

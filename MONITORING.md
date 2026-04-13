@@ -39,12 +39,12 @@ GitHub Actions (cron / dispatch)
 
 | Secret | Used by |
 |---|---|
-| `PUSHGATEWAY_URL` | All scripts |
+| `PUSHGATEWAY_ENDPOINT` | All scripts |
 | `PUSHGATEWAY_USERNAME` | All scripts |
 | `PUSHGATEWAY_PASSWORD` | All scripts |
-| `STAC_URL_PROD` | Availability + functional workflows |
-| `STAC_URL_DEV` | Availability + functional workflows |
-| `STAC_WRITE_TOKEN` | Functional test (ingest test only, skipped if absent) |
+| `INGEST_URL` | Functional test — dev job only (ingest test skipped if unset) |
+| `INGEST_USER` | Functional test — dev job only |
+| `INGEST_PASSWORD` | Functional test — dev job only |
 
 ---
 
@@ -63,7 +63,7 @@ GitHub Actions (cron / dispatch)
 | `search_post` | POST /search `{"collections":[id],"limit":5}` | Search returns results |
 | `asset_fetch` | HEAD on first asset href | Asset URL is reachable |
 
-**Asset fetch note:** 401/403 responses are treated as success (asset storage requires auth, which is expected). `asset_fetch` is also excluded from the overall pass/fail result — a failing asset fetch does not fail the monitoring run.
+**Asset fetch note:** 401/403 responses are treated as success (asset storage requires auth, which is expected). `asset_fetch` is excluded from the overall pass/fail result — a failing asset fetch does not fail the monitoring run.
 
 **Metrics pushed** (labels: `env`, `service`, `probe`, `collection`):
 - `eodc_e2e_probe_success` — 1 (OK) or 0 (FAIL)
@@ -84,8 +84,16 @@ GitHub Actions (cron / dispatch)
 | `test_known_item_exists` | A known item can be fetched by ID |
 | `test_search_with_collection_filter` | POST /search with collection filter returns results |
 | `test_pagination_no_overlap` | Page 2 of /items shares no items with page 1 |
-| `test_ingest_visible_delete` | POST item → GET it → DELETE it (skipped if no write token) |
+| `test_ingest_visible_delete` | POST item → poll until visible in /search → DELETE it |
 | `test_asset_href_format` | All asset hrefs use a valid URL scheme (http/https/s3) |
+
+**Ingest test details:**
+- Uses Basic auth (`INGEST_URL`, `INGEST_USER`, `INGEST_PASSWORD`)
+- Fixed collection: `SENTINEL1_GRD`, fixed item id: `monitoring`
+- Polls `/search` for up to 60 s waiting for the item to appear
+- Always deletes the test item at the end (even if the assertion fails)
+- Skipped automatically if `INGEST_URL` / `INGEST_USER` / `INGEST_PASSWORD` are not set
+- Only runs in the **dev** job — prod job does not set these secrets since the ingest endpoint points to dev infrastructure
 
 **Note:** These tests use the first available collection internally. The Grafana collection filter does not affect this row.
 
@@ -98,9 +106,9 @@ GitHub Actions (cron / dispatch)
 
 ## Script 3 — Performance test (`test_stac_performance.py`)
 
-**Runs:** on-demand only — trigger the `perf_test` workflow manually in GitHub Actions.
+**Runs:** on-demand only — trigger the `perf_test` workflow manually in GitHub Actions. Choose target environment (prod/dev) and optionally a specific collection to probe.
 
-**What it does:** Headless [Locust](https://locust.io) load test against two endpoints, with four virtual-user (VU) stages:
+**What it does:** Headless [Locust](https://locust.io) load test with four virtual-user (VU) stages:
 
 | Stage | VUs | Duration |
 |---|---|---|
@@ -109,15 +117,18 @@ GitHub Actions (cron / dispatch)
 | 3 | 50 | 60 s |
 | 4 | 100 | 60 s |
 
-Each VU randomly picks: POST /search (2/3 of requests) or GET /collections/{id}/items (1/3).
+Each VU fetches all available collections on startup, then continuously runs two tasks:
+- **POST /search** — random spatial polygon (shapely), random datetime range (2015–2025), random subset of collections, limit 100
+- **GET /collections/{id}/items** — random collection from the available list, limit 10
 
-After each stage, metrics are pushed per endpoint:
+After **all stages complete**, all metrics are pushed in a single PUT per (endpoint, vus) combination. Pushing everything together in one call is important — Pushgateway replaces all metrics at a grouping key on each PUT, so separate pushes would overwrite earlier data.
 
-**Metrics pushed** (labels: `env`, `service`, `endpoint`):
-- `eodc_e2e_perf_p95_seconds` — 95th percentile response time
+**Metrics pushed** (labels: `env`, `service`, `endpoint`, `vus`):
+- `eodc_e2e_perf_p95_seconds` — 95th percentile response time in seconds
 - `eodc_e2e_perf_rps` — requests per second
 - `eodc_e2e_perf_error_rate` — fraction of failed requests (0–1)
-- `eodc_e2e_perf_vus` — VU count for the stage
+- `eodc_e2e_perf_vus` — VU count for that stage
+- `eodc_e2e_perf_slowdown_ratio` — p95 relative to the 10-VU baseline (1.0 = no slowdown, 3.0 = 3× slower)
 - `eodc_e2e_perf_last_run_timestamp` — unix timestamp of the run
 
 Endpoint label values: `POST_search`, `GET_collections_id_items`.
@@ -138,9 +149,9 @@ The dashboard has three rows:
 | Uptime (24h) | % of 30-min check windows in the last 24h where all probes passed |
 | Last Run | When the most recent availability check ran |
 | Probe History | State timeline — 6 rows (one per probe type), worst result across selected collections. Red = any collection failing that probe. |
-| Collection Health | Table — one row per collection, green OK / red FAIL. Shows which collection is the problem. |
-| Failing Probes | Table — only rows where `probe_success == 0`. Shows exactly which probe failed for which collection. Empty when everything is healthy. |
-| Probe Duration | Timeseries — average response time per probe type over time. |
+| Collection Health | Table — one row per collection, green OK / red FAIL |
+| Failing Probes | Table — only rows where `probe_success == 0`. Empty when everything is healthy. |
+| Probe Duration | Timeseries — average response time per probe type over time |
 
 The **Collection** variable filters all availability panels. Selecting a specific collection narrows all panels to that collection only.
 
@@ -159,16 +170,17 @@ The **Collection** variable filters all availability panels. Selecting a specifi
 
 | Panel | What it shows |
 |---|---|
-| p95 — POST /search | Latest 95th-percentile response time for search |
-| p95 — GET /items | Latest 95th-percentile response time for items |
-| Error Rate — POST /search | Fraction of failed search requests |
-| Error Rate — GET /items | Fraction of failed items requests |
-| VUs | VU count from the last performance run |
+| p95 stat | Worst-case p95 across all VU stages, per endpoint |
+| RPS stat | Worst-case RPS across all VU stages, per endpoint |
+| Error Rate stat | Error fraction per endpoint |
+| VUs | Max VU count from the last run (100) |
 | Last Run | When the last performance run happened |
-| p95 trend | Timeseries of p95 across multiple runs |
-| RPS trend | Timeseries of RPS across multiple runs |
+| p95 trend | Timeseries of p95 per endpoint and VU stage across multiple runs |
+| RPS trend | Timeseries of RPS per endpoint and VU stage across multiple runs |
+| Slowdown table | Rows: (VU count × endpoint), value: slowdown ratio vs 10-VU baseline |
+| Slowdown bargauge | Horizontal bars showing slowdown ratio per (VU count × endpoint), green→red |
 
-**Note:** The Collection filter does not affect the performance row. Performance tests run against a fixed collection on-demand only.
+**Note:** The Collection filter does not affect the performance row.
 
 ### Response time thresholds
 
@@ -178,8 +190,9 @@ The **Collection** variable filters all availability panels. Selecting a specifi
 | Error rate | < 1% | 1–5% | ≥ 5% |
 | Uptime (24h) | ≥ 99% | 95–99% | < 95% |
 | Pass rate (functional) | 100% | 80–99% | < 80% |
+| Slowdown ratio | < 2× | 2–4× | ≥ 4× |
 
-These thresholds are based on general API usability standards (< 1 s feels instant; ≥ 3 s users notice degradation). They should be updated once EODC defines formal SLOs for the STAC API.
+Thresholds are based on general API usability standards and should be updated once EODC defines formal SLOs for the STAC API.
 
 ---
 
@@ -202,7 +215,10 @@ Set environment variables as needed:
 ```bash
 export STAC_URL=https://stac.eodc.eu/api/v1
 export E2E_ENV=dev
-export PUSHGATEWAY_URL=https://...   # optional; skip push if unset
+export PUSHGATEWAY_URL=https://...      # optional; skip push if unset
+export INGEST_URL=https://...           # optional; ingest test skipped if unset
+export INGEST_USER=...
+export INGEST_PASSWORD=...
 ```
 
 ---
