@@ -1,22 +1,3 @@
-#!/usr/bin/env python3
-"""
-STAC API load test — headless Locust runner.
-
-Runs four VU stages (10 → 25 → 50 → 100 users, 60 s each) against the STAC
-search and items endpoints, then pushes per-endpoint perf metrics to Pushgateway.
-
-Run on demand only (workflow_dispatch in CI)
-
-Environment variables:
-  STAC_URL               target API base (default: https://stac.eodc.eu/api/v1)
-  E2E_ENV                env label pushed with metrics (default: dev)
-  STAC_PERF_COLLECTION   specific collection to probe (default: first collection found)
-  PUSHGATEWAY_URL        base URL of the Pushgateway (optional; skip push if unset)
-  PUSHGATEWAY_USERNAME   basic-auth username
-  PUSHGATEWAY_PASSWORD   basic-auth password
-"""
-
-# gevent monkey-patch MUST happen before any other import touches ssl/urllib3
 import gevent.monkey
 gevent.monkey.patch_all()
 
@@ -37,9 +18,8 @@ from shapely.validation import explain_validity
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-# ---------------------------------------------------------------------------
 # Config
-# ---------------------------------------------------------------------------
+
 STAC_URL    = os.environ.get("STAC_URL", "https://stac.eodc.eu/api/v1")
 ENV         = os.environ.get("E2E_ENV", "dev")
 SERVICE     = "stac"
@@ -57,9 +37,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Resolve probe collection at import time
-# ---------------------------------------------------------------------------
 
 def _resolve_collection() -> str:
     override = os.environ.get("STAC_PERF_COLLECTION")
@@ -79,9 +57,7 @@ def _resolve_collection() -> str:
 PROBE_COLLECTION = _resolve_collection()
 log.info("Performance probe collection: %s", PROBE_COLLECTION)
 
-# ---------------------------------------------------------------------------
 # Locust user
-# ---------------------------------------------------------------------------
 
 class StacUser(HttpUser):
     host = STAC_URL
@@ -119,10 +95,8 @@ class StacUser(HttpUser):
             name="GET /collections/{id}/items",
         )
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
+# Helpers
+  
     @staticmethod
     def _random_datetime() -> str:
         start = datetime(2015, 1, 1)
@@ -153,9 +127,7 @@ class StacUser(HttpUser):
         k = random.randint(1, min(len(self._collections), 5))
         return random.sample(self._collections, k)
 
-# ---------------------------------------------------------------------------
 # Pushgateway helpers
-# ---------------------------------------------------------------------------
 
 def _push(grouping_key: dict, reg: CollectorRegistry):
     if not PUSHGW_URL:
@@ -206,10 +178,7 @@ def _push_all_metrics(all_stages: dict):
             log.info("  pushed  endpoint=%-35s  vu=%3d  p95=%.3fs  rps=%.1f  err=%.3f  slowdown=%.2fx",
                      endpoint, vu_count, s["p95"], s["rps"], s["err"], ratio)
 
-# ---------------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------------
-
 
 def main():
     setup_logging("INFO")

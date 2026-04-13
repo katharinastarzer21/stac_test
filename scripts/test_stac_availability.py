@@ -1,17 +1,3 @@
-#!/usr/bin/env python3
-"""
-STAC API availability prober.
-Runs a fixed set of probes against STAC_URL and pushes per-probe metrics
-to Pushgateway, then a roll-up via e2e_helpers.prom.push_e2e_result.
-
-Environment variables:
-  STAC_URL               target API base (default: https://stac.eodc.eu/api/v1)
-  E2E_ENV                label injected into every metric (default: dev)
-  PUSHGATEWAY_URL        base URL of the Pushgateway (optional; skip push if unset)
-  PUSHGATEWAY_USERNAME   basic-auth username
-  PUSHGATEWAY_PASSWORD   basic-auth password
-"""
-
 import os
 import sys
 import time

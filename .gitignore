@@ -8,3 +8,5 @@ MONITORING.md
 debug_asset.py
 results/
 logs/
+grafana/
+json_backup.json

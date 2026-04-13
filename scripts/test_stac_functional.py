@@ -1,20 +1,3 @@
-#!/usr/bin/env python3
-"""
-Functional correctness tests for the STAC API.
-
-Run with:
-  pytest scripts/test_stac_functional.py -v
-
-Environment variables:
-  STAC_URL          target API base (default: https://stac.eodc.eu/api/v1)
-  E2E_ENV           env label (default: dev)
-  INGEST_URL        ingest API base URL (skip ingest test if unset)
-  INGEST_USER       basic-auth username for ingest API
-  INGEST_PASSWORD   basic-auth password for ingest API
-
-Metrics are pushed to Pushgateway by scripts/conftest.py after the session ends.
-"""
-
 import os
 import time
 import pytest
@@ -54,10 +37,6 @@ _INGEST_ITEM = {
     "collection": _INGEST_COLLECTION,
 }
 
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
 @pytest.fixture(scope="module")
 def collection_id():
     override = os.environ.get("STAC_FUNCTIONAL_COLLECTION")
@@ -83,9 +62,6 @@ def known_item_id(collection_id):
         pytest.skip(f"No items found in collection '{collection_id}'")
     return features[0]["id"]
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _extract_next_token(body: dict) -> str | None:
     """Return the next-page token from a STAC paged response, or None."""
@@ -104,9 +80,7 @@ def _extract_next_token(body: dict) -> str | None:
         return ctx["next"]
     return None
 
-# ---------------------------------------------------------------------------
 # Tests
-# ---------------------------------------------------------------------------
 
 def test_collections_not_empty():
     """Collections endpoint returns at least one collection."""
