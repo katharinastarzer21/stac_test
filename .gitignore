@@ -4,3 +4,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 *.egg-info/
+MONITORING.md
+debug_asset.py
+results/
+logs/
