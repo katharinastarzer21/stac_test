@@ -104,7 +104,7 @@ def run():
         if resp and resp.status_code == 200:
             for feat in resp.json().get("features", []):
                 for asset in feat.get("assets", {}).values():
-                    if asset.get("href", "").startswith("http"):
+                    if isinstance(asset, dict) and asset.get("href", "").startswith("http"):
                         asset_url = asset["href"]
                         break
                 if asset_url:
