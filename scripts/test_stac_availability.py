@@ -55,14 +55,14 @@ def run():
     status, dur, _ = request("get", f"{STAC_URL}/")
     result = ok(status)
     log.info("root              %s  http=%d  %.0fms", "OK" if result else "FAIL", status, dur * 1000)
-    push("root", "", result, dur, status)
+    push("root", "_", result, dur, status)
     all_ok = all_ok and result
 
     # Collections list
     status, dur, resp = request("get", f"{STAC_URL}/collections")
     result = ok(status)
     log.info("collections_list  %s  http=%d  %.0fms", "OK" if result else "FAIL", status, dur * 1000)
-    push("collections_list", "", result, dur, status)
+    push("collections_list", "_", result, dur, status)
     all_ok = all_ok and result
 
     if not result:
