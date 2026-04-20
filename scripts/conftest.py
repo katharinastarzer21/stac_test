@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 SERVICE     = "stac"
 ENV         = os.environ.get("E2E_ENV", "dev")
-COLLECTION  = os.environ.get("STAC_FUNCTIONAL_COLLECTION", "auto")
+COLLECTION  = os.environ.get("STAC_FUNCTIONAL_COLLECTION") or "auto"
 PUSHGW_URL  = os.environ.get("PUSHGATEWAY_URL")
 PUSHGW_USER = os.environ.get("PUSHGATEWAY_USERNAME")
 PUSHGW_PASS = os.environ.get("PUSHGATEWAY_PASSWORD")
